@@ -1,18 +1,28 @@
 let transactions = [];
 let myChart;
 
-fetch("/api/transaction")
-  .then(response => {
-    return response.json();
-  })
-  .then(data => {
-    // save db data on global variable
-    transactions = data;
 
-    populateTotal();
-    populateTable();
-    populateChart();
-  });
+window.addEventListener('load', (event) => {
+  console.log('For onLoad!!!');
+  fetch("/api/transaction")
+    .then(response => {
+      return response.json();
+    })
+    .then(data => {
+      // save db data on global variable
+      console.log('the data!!', data);
+      transactions = [];
+      transactions = data;
+
+      populateTotal();
+      populateTable();
+      populateChart();
+    })
+    .catch((err) => {
+      console.log(`${err} is in transactions`);
+     })
+    ;
+});
 
 function populateTotal() {
   // reduce transaction amounts to a single total value
@@ -104,6 +114,13 @@ function sendTransaction(isAdding) {
     transaction.value *= -1;
   }
 
+    // NOTE: send message to service worker via postMessage
+  var msg = {
+    form_data: transaction
+  }
+  navigator.serviceWorker.controller.postMessage(msg)  // NOTE: <-This
+// line right here sends our data to service-worker.js
+
   // add to beginning of current array of data
   transactions.unshift(transaction);
 
@@ -136,7 +153,7 @@ function sendTransaction(isAdding) {
   })
   .catch(err => {
     // fetch failed, so save in indexed db
-    saveRecord(transaction);
+    //saveRecord(transaction);
 
     // clear form
     nameEl.value = "";
